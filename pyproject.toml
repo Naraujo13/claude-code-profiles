@@ -27,3 +27,16 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 py-modules = ["ccp"]
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-cov>=5"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["ccp"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
