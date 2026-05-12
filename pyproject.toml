@@ -1,6 +1,6 @@
 [project]
 name = "claude-code-profiles"
-version = "1.0.0"
+version = "1.0.1"
 description = "Named profiles for Claude Code MCP servers and plugins"
 readme = "README.md"
 license = "MIT"
