@@ -1,0 +1,29 @@
+[project]
+name = "claude-code-profiles"
+version = "1.0.0"
+description = "Named profiles for Claude Code MCP servers and plugins"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [{ name = "Nícolas de Araujo", email = "nicolas.oreques@gmail.com" }]
+keywords = ["claude", "claude-code", "mcp", "anthropic", "profiles"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://github.com/Naraujo13/claude-profiles"
+Repository = "https://github.com/Naraujo13/claude-profiles"
+
+[project.scripts]
+ccp = "ccp:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["ccp"]
