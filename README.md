@@ -1,129 +1,59 @@
 # claude-code-profiles
 
-Lightweight CLI to manage named profiles for [Claude Code](https://claude.ai/code) — switch which MCP servers and plugins are active without touching your `settings.json` manually.
+Claude Code loads every MCP server and plugin you have configured. As your setup grows, that can become context clutter with irrelevant toolings for different situations.
 
-## How it works
+`ccp` lets you define named profiles and launch Claude with only what that context needs. Run multiple sessions in parallel, each with a different profile, without touching your `settings.json`.
 
-Each profile declares which MCP servers and plugins to enable. When you run `ccp <name>`, it:
 
-1. Reads your `~/.claude/settings.json` and `~/.claude.json` in memory — never writes to them
-2. Builds a filtered MCP config containing only the servers your profile wants
-3. Launches claude with `--mcp-config <tmpfile> --strict-mcp-config --settings <tmpfile>`
-4. Cleans up the temp files when the session ends
+```bash
+ccp infra      # terminal 1: claude with k8s, pagerduty, terraform
+ccp code       # terminal 2: claude with github, lsp, docs
+ccp research   # terminal 3: claude with search and notes only
+```
 
-**Plugins** are controlled via `--settings` (patches `enabledPlugins`).
-**MCP servers** are controlled via `--mcp-config` + `--strict-mcp-config`, which tells Claude Code to use only the servers in the profile and ignore all others.
+Each runs independently with its own isolated tool set, allowing for different setups in parallel sessions.
 
-Your base settings are never modified.
-
-### Where MCP definitions come from
-
-`ccp` discovers MCP server definitions from three sources, in priority order:
-
-1. **`~/.claude.json`** — user-scope registry (where `claude mcp add --scope user` writes)
-2. **`~/.claude/settings.json` `mcpServers`** — directly defined servers
-3. **`.mcp.json` files** — scanned walking up from the current directory to home, plus plugin cache and marketplace directories
-
-> **Note:** If you add a new MCP after creating a profile, update the profile to include it — otherwise it will be excluded when the profile is applied.
-
-## Requirements
-
-- Python 3.9+
-- Claude Code installed and configured (`~/.claude/settings.json` must exist)
-
-## Installation
+## Install
 
 ```bash
 uv tool install claude-code-profiles
 ```
 
-To update later:
+Requires Python 3.9+ and [Claude Code](https://claude.ai/code).
+
+## Quickstart
 
 ```bash
-uv tool upgrade claude-code-profiles
+ccp create <profile>   # opens editor pre-filled with all your MCPs and plugins
+                       # remove what you don't want, save and close
+ccp <profile>          # launch claude with that profile
 ```
 
-Make sure `~/.local/bin` is on your `$PATH`. If it isn't, add this to your shell config:
+## Commands
 
 ```bash
-export PATH="$PATH:$HOME/.local/bin"
-```
-
-To uninstall:
-
-```bash
-uv tool uninstall claude-code-profiles
-```
-
-## Usage
-
-```bash
-ccp list              # list available profiles
-ccp show <name>       # show profile contents
-ccp create <name>     # create a new profile (opens VS Code or nano)
+ccp list              # list profiles
+ccp show <name>       # inspect a profile
+ccp create <name>     # create a new profile
+ccp edit <name>       # edit an existing profile
 ccp remove <name>     # delete a profile
 ccp <name> [args...]  # launch claude with profile applied
 ```
 
-## Creating a profile
-
-```bash
-ccp create code
-```
-
-This opens an editor pre-populated with every MCP and plugin discovered from your setup. Remove the ones you don't want, save and close.
-
-**Profile structure:**
+## Profile format
 
 ```json
 {
-  "description": "Code mode — LSPs and GitHub only",
-  "enabledMcpjsonServers": ["github", "postgres", "filesystem"],
-  "enabledPlugins": [
-    "some-plugin@claude-plugins-official"
-  ]
-}
-```
-
-Anything removed from the lists is disabled when the profile is applied.
-
-## Profiles directory
-
-Profiles are stored in `~/.claude/profiles/` by default. Override with:
-
-```bash
-export CCP_PROFILES_DIR=/path/to/profiles
-```
-
-## Example profiles
-
-**code** — focused coding session:
-```json
-{
-  "description": "Coding — GitHub, LSP, and docs",
+  "description": "Coding — GitHub and docs only",
   "enabledMcpjsonServers": ["github", "filesystem"],
-  "enabledPlugins": [
-    "context7@claude-plugins-official"
-  ]
+  "enabledPlugins": ["context7@claude-plugins-official"]
 }
 ```
 
-**infra** — infrastructure work:
-```json
-{
-  "description": "Infra — Kubernetes, Terraform, PagerDuty",
-  "enabledMcpjsonServers": ["kubernetes", "pagerduty", "github"],
-  "enabledPlugins": []
-}
-```
+Profiles live in `~/.claude/profiles/` by default. Override with `$CCP_PROFILES_DIR`.
 
-**research** — docs and planning:
-```json
-{
-  "description": "Research — notes and web",
-  "enabledMcpjsonServers": ["obsidian", "brave-search"],
-  "enabledPlugins": [
-    "context7@claude-plugins-official"
-  ]
-}
-```
+## How it works
+
+When you run `ccp <name>`, it builds a filtered MCP config from your profile and launches Claude with `--mcp-config --strict-mcp-config --settings`, using temp files that are cleaned up after the session. Nothing is written to your settings.
+
+MCP definitions are discovered from `~/.claude.json`, `~/.claude/settings.json`, and `.mcp.json` files walked up from your current directory.
